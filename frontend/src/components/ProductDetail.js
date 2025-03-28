@@ -1,26 +1,39 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProductById } from "../api";
+import axios from "axios";
 
-const ProductDetail = () => {
-    const { id } = useParams();
-    const [product, setProduct] = useState(null);
+export default function ProductDetail() {
+  const { id } = useParams(); // ✅ Extract ID from URL
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        getProductById(id)
-            .then((response) => setProduct(response.data))
-            .catch((error) => console.error("Error fetching product:", error));
-    }, [id]);
+  useEffect(() => {
+    if (!id || isNaN(id)) {
+      setError("Invalid product ID.");
+      return;
+    }
 
-    if (!product) return <p>Loading...</p>;
+    const fetchProduct = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/products/${id}/`);
+        setProduct(response.data);
+      } catch (err) {
+        setError("Error fetching product details.");
+        console.error("Error fetching product details:", err);
+      }
+    };
 
-    return (
-        <div>
-            <h2>{product.name}</h2>
-            <p>Price: ${product.price}</p>
-            <p>{product.description}</p>
-        </div>
-    );
-};
+    fetchProduct();
+  }, [id]);
 
-export default ProductDetail;
+  if (error) return <p className="text-red-500">{error}</p>;
+  if (!product) return <p>Loading product details...</p>;
+
+  return (
+    <div className="container mx-auto p-4">
+      <h2 className="text-2xl font-bold">{product.name}</h2>
+      <p className="text-gray-700">{product.description}</p>
+      <p className="text-blue-600 font-semibold">Price: ${product.price}</p>
+    </div>
+  );
+}

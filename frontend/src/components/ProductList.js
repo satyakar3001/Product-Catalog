@@ -1,29 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { getProducts } from "../api";
+import axios from "axios";
 import { Link } from "react-router-dom";
 
-const ProductList = () => {
-    const [products, setProducts] = useState([]);
+export default function ProductList() {
+  const [products, setProducts] = useState([]);
 
-    useEffect(() => {
-        getProducts()
-            .then((response) => setProducts(response.data))
-            .catch((error) => console.error("Error fetching products:", error));
-    }, []);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/products/");
+        setProducts(response.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
 
-    return (
-        <div>
-            <h2>Product List</h2>
-            <ul>
-                {products.map((product) => (
-                    <li key={product.prodId}>
-                        <Link to={`/products/${product.prodId}`}>{product.name} - ${product.price}</Link>
-                    </li>
-                ))}
-            </ul>
-            <Link to="/add-product">Add Product</Link>
-        </div>
-    );
-};
+    fetchProducts();
+  }, []);
 
-export default ProductList;
+  return (
+    <div className="container mx-auto p-4">
+      <h2 className="text-2xl font-bold">Products</h2>
+      <ul>
+        {products.map((product) => (
+          <li key={product.id}> {/* ✅ FIXED: Added key prop */}
+            <Link to={`/products/${product.id}`} className="text-blue-500">
+              {product.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
