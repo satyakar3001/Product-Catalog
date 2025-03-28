@@ -1,10 +1,23 @@
 services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: webAppDB
+    ports:
+      - "5432:5432"
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
+    depends_on:
+      - db
     volumes:
       - ./backend:/app
+    command: >
+      sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
 
   frontend:
     build: ./frontend
@@ -12,3 +25,7 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "start"]
